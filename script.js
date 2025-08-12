@@ -129,7 +129,7 @@ function createAula(data = {}) {
         outputTextarea.value = 'Formatando... aguarde...';
         try {
             const GEMINI_API_KEY = document.getElementById('API_KEY').value.trim();
-            const completion = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
+            const completion = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
