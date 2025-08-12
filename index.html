@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Formatador de Decupagens com IA</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app">
+        <h1>Formatador de Decupagens (com IA OpenAI)</h1>
+
+        <input type="text" id="project-name-input" placeholder="Nome do Projeto" />
+
+        <textarea id="global-prompt-textarea" placeholder="Instruções gerais para a IA..."></textarea>
+
+        <div id="aulas-container"></div>
+
+        <button id="add-aula-btn">Adicionar Aula</button>
+        <button id="export-all-btn">Exportar Tudo</button>
+        <button id="save-local-btn">Salvar no Navegador</button>
+        <button id="download-project-btn">Baixar Projeto (.json)</button>
+        <button id="upload-project-btn">Carregar Projeto (.json)</button>
+        <input type="file" id="project-file-input" style="display:none" accept=".json" />
+
+    </div>
+
+    <!-- Template de Aula -->
+    <template id="aula-template">
+        <div class="aula-container">
+            <h3 class="aula-title">Aula X</h3>
+            <label>
+                <input type="checkbox" class="multipart-checkbox" />
+                Vídeo em várias partes
+            </label>
+            <div class="inputs-wrapper"></div>
+
+            <button class="add-part-btn" style="display:none;">Adicionar parte</button>
+            <button class="format-btn">Formatar</button>
+            <button class="export-individual-btn">Exportar Aula</button>
+            <button class="remove-aula-btn">Remover Aula</button>
+
+            <textarea class="output-textarea" placeholder="O resultado formatado aparecerá aqui..." readonly></textarea>
+            <button class="copy-btn" style="display:none;">Copiar</button>
+        </div>
+    </template>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
