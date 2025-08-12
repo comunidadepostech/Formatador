@@ -1,7 +1,7 @@
 // script.js
 
 // COLOQUE AQUI SUA API KEY DA OPENAI
-const OPENAI_API_KEY = "SUA_API_KEY_AQUI";
+const API_KEY = "SUA_API_KEY_AQUI";
 
 // Elementos
 const aulasContainer = document.getElementById('aulas-container');
@@ -131,31 +131,29 @@ function createAula(data = {}) {
 
         outputTextarea.value = 'Formatando... aguarde...';
         try {
-            const completion = await fetch('https://api.openai.com/v1/chat/completions', {
+            const completion = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    'x-goog-api-key': API_KEY
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        {
-                            role: "user",
-                            content: `Você é um assistente que formata textos seguindo as instruções do usuário, respeitando tabulações e a estrutura do texto. INSTRUÇÕES:\n${promptGeneral}\n\nTEXTO DE ENTRADA:\n${allInputs}\n\nRESULTADO FORMATADO:`
-                        }
-                    ]
+                    contents: [{
+                        parts: [{
+                            text: `${promptGeneral}\n\nTEXTO DE ENTRADA:\n${allInputs}\n\nRESULTADO FORMATADO:`
+                        }]
+                    }]
                 })
             });
 
             if (!completion.ok) {
                 const err = await completion.json();
-                outputTextarea.value = `Erro na API: ${err.error.message || 'Desconhecido'}`;
+                outputTextarea.value = `Erro na API: ${err.error?.message || 'Desconhecido'}`;
                 return;
             }
 
             const data = await completion.json();
-            outputTextarea.value = data.choices[0].message.content.trim();
+            outputTextarea.value = data.candidates[0].content.parts[0].text.trim();
         } catch (e) {
             outputTextarea.value = `Erro: ${e.message}`;
         }
