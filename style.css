@@ -54,7 +54,7 @@ button {
     background: #388e3c;
 }
 
-#project-name-input, #global-prompt-textarea {
+#project-name-input, #global-prompt-textarea #API_KEY {
     width: 100%;
     box-sizing: border-box;
     margin-bottom: 10px;
