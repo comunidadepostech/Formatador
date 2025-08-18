@@ -1,111 +1,238 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Formatador de Decupagens com IA</title>
-<link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatador de Decupagens Markerbox</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ia": "https://esm.run/@google/generative-ia",
+            "xlsx": "https://esm.run/xlsx"
+          }
+        }
+    </script>
 </head>
 <body>
-    <div id="app">
-        <h1>Formatador de Decupagens</h1>
+<div id="app">
+    <header class="app-header">
+        <div class="title-container">
+            <div class="main-title-bar">
+                <h1>Formatador de Decupagens Markerbox</h1>
+                <nav class="app-nav">
+                    <a href="#" id="instructions-tab" class="nav-tab">Instruções</a>
+                    <a href="#" id="background-tab" class="nav-tab">Sobre</a>
+                    <a href="#" id="options-tab" class="nav-tab">Opções</a>
+                </nav>
+            </div>
+            <input type="text" id="project-name-input" placeholder="Nome da Decupagem...">
+            <div class="project-metadata">
+                <input type="text" id="responsible-notes-input" placeholder="Responsável pelas notas...">
+                <input type="text" id="responsible-editor-input" placeholder="Responsável pela edição...">
+                <input type="text" id="course-input" placeholder="Curso (ABC)" maxlength="10">
+                <input type="number" id="phase-input" placeholder="Fase">
+                <input type="text" id="discipline-input" placeholder="Disciplina...">
+            </div>
+            <input type="text" id="API_KEY" placeholder="Insira sua chave API aqui..."/>
+        </div>
+        <div class="project-controls">
+            <button id="save-local-btn" title="Salvar no navegador"><img src="save-icon.png" alt="Salvar"></button>
+            <select id="load-project-select">
+                <option value="">Carregar Decupagem...</option>
+            </select>
+            <button id="delete-project-btn" class="danger">Excluir</button>
+            <div class="project-file-controls">
+                <button id="download-project-btn" title="Baixar arquivo .json"><img src="download-icon.png" alt="Baixar"></button>
+                <button id="upload-project-btn" title="Carregar de um arquivo .json"><img src="upload-icon.png" alt="Carregar"></button>
+            </div>
+            <input type="file" id="project-file-input" style="display: none;" accept=".json">
+        </div>
+    </header>
 
-        <input type="text" id="project-name-input" placeholder="Nome do Projeto" />
-        <input type="text" id="API_KEY" placeholder="Digite o seu API key" />
-
-        <textarea id="global-prompt-textarea" placeholder="Instruções gerais para a IA...">Você agora deve auxiliar na formatação de textos de decupagem para o formato aceito na ferramenta Markerbox. Você receberá textos de decupagem que contém minutagens de entrada e saída que podem conter comentários relativos à elas. Quando houver uma minutagem incompleta (somente entrada/saída), você deve adicionar a minutagem faltante (entrada ou saida) com uma pequena diferença de até 10 segundos para que o Markerbox entenda e possa criar a marcação corretamente (estas minutagens incompletas geralmente vêm com um comentário como "início/encerramento do vídeo/gravação").
-            Um exemplo de texto original de decupagem:
-
-            "2GETT - IA para Negócios
-            Aula 1 / Vídeo 2 - Como a IA pode te ajudar na visão de futuro e insights
-            Vídeo começa em: 22s (Sejam bem-vindos e bem-vindas)
-            *Substituir o slide de 19min53s à 21min15s & de 21min25s à 21min32s pelo *slide 31* do PPTx da Aula 1: Aula 1 - COMO A IA PODE TE AJUDAR NA VISÃO DE FUTURO E INSIGHTS_revisado.pptx
-            27min47s (muito mais facilitados ali pro seu processo) ~ 29min25s (nesse vídeo a gente entendeu)
-            Vídeo termina em: 29min48s (te vejo no próximo vídeo)"
-
-            Como este exemplo deve ficar após formatado para o Markerbox:
-            00:22	00:25	Início do vídeo
-            19:53	21:15	Substituir slide
-            21:25	21:32	Substituir slide
-            27:47	29:25	(muito mais facilitados ali pro seu processo)~(nesse vídeo a gente entendeu)
-            29:48	29:52	Final do vídeo	(te vejo no próximo vídeo)
-
-            ATENÇÃO: Você não deve escrever "[Tab]", mas sim adicionar um espaço especial utilizando o recurso de tabulação do teclado
-            Você deve evitar de realizar quebras de linha indevidas, pois isso faz com que o Markerbox ignore os valores desejados. Isso significa realizar quebras de linha somente quando for iniciar uma nova marcação de minutagem.
-            Você deve ser sensível aos valores de tempo e marcações de texto do tempo orginal, julgando quando deve unir linhas ou criar marcações de entrada/saída conforme a instrução. Isso significa que, no exemplo de input original abaixo:
-            "00:14 (Introdução)
-            01:42 (Corte)
-            01:53 (Retorna em: "Então, bem-vindos a aula de Desenvolvimento...")
-            14:06 (Corte)
-            14:48 (Retorna em: "Hoje T.I está no centro do negócio...")"
-            Você deve levar em consideração que o "00:14  (Introdução)" deve ter o valor de entrada de "00:00", uma vez que todo vídeo inicia do zero, também que em "01:42 (corte)" há um corte no vídeo sem o valor exato de entada/saída na mesma linha, mas pela lógica que o corte deve ser retomado, podemos encontrar o valor de saída na linha "01:53 (Retorna...". Você deve levar essas coisas em consideração para que JAMAIS gere minutagens erradas como no exemplo:
-            "00:13	00:14	(Introdução)
-            00:14	01:42	(Corte)
-            01:42	01:53	(Retorna em: "Então, bem-vindos a aula de Desenvolvimento...")" - pois aqui o erro está em criar uma marcação de "00:14" à "01:42" que não deveria existir
-            Realize uma verificação de lógica e reflita após a formatação antes de retornar sua resposta.
-
-            Quando houverem casos em que há somente um valor de entrada seguido de "(Corte)" ou "Corte" na mesma linha ou se houver um valor de entrada e um valor de saída seguidos apenas de "(Corte)" e, ao mesmo tempo, na linha logo abaixo também só houver um valor de entrada seguido de "Retoma...", você deve juntar o valor de entrada da segunda linha à primeira linha como valor final, eliminando o texto "(Corte)" e fromatando com os espaços de Tab como as demais formatações.
-            Aqui um exemplo do texto ANTES da formatação com entradas e saídas ERRADAS:
-            "03:31 (Corte)
-            03:39 (Retorna em: "E a arquitetura ela é estratégia...")"
-
-            Aqui como este texto deve ficar após a formatação:
-            "03:31	03:39	(Retoma em: "E a arquitetura ela é estratégia...")"
-
-            Aqui outro exemplo do texto ANTES da formatação com entradas e saídas ERRADAS:
-            "00:00 - 00:18 (Corte)
-            00:19 (Retorna em: "KPIs que importam...")"
-
-            Aqui como este texto deve ficar após a formatação:
-            "00:18	00:19	(Retorna em: "KPIs que importam...")"
-            Quando houverem linhas que iniciam com um valor de tempo menor do que o último valor de tempo linhas acima, isso significa que esta é uma decupagem com mais de uma PARTE. Um exemplo de como identificar decupagens com mais de uma PARTE:
-            "00:55	00:56	(Introdução)
-            04:12	04:16	(Corte e finaliza - O Riverside bugou para mim durante a gravação, então finalizamos ela
-            e iniciamos novamente na PARTE 2)
-            00:00	00:18	(Corte)
-            00:19	00:20	(Retorna em: "KPIs que importam...")
-            26:10	26:11	(Finaliza)"
-
-            Neste exemplo acima, o valor "00:00" na terceira linha é menor que "04:16", que deveria ser o valor final mais alto das linahs anteriores.
-            Quando isso acontecer, todos os valores de entrada e saída da linha identificada como o início de uma nova PARTE devem ser recalculados de forma a dar continuidade na decupagem como se fosse um único vídeo, a partir do último valor de tempo mais alto. Utilizando ainda o exemplo acima, é assim que o texto deveria ficar após formatado:
-            "00:54	00:55	(INTRODUÇÃO)
-            04:12	04:16	(Corte e finaliza - O Riverside bugou para mim durante a gravação, então finalizamos ela
-            e iniciamos novamente na PARTE 2)
-            04:16	04:34	(Corte)
-            04:35	04:36	(Retorna em: "KPIs que importam...")
-            30:26	30:27	(finaliza)"</textarea>
-
-        <div id="aulas-container"></div>
-
+    <div class="global-actions">
         <button id="add-aula-btn">Adicionar Aula</button>
-        <button id="export-all-btn">Exportar Tudo</button>
-        <button id="save-local-btn">Salvar no Navegador</button>
-        <button id="download-project-btn">Baixar Projeto (.json)</button>
-        <button id="upload-project-btn">Carregar Projeto (.json)</button>
-        <input type="file" id="project-file-input" style="display:none" accept=".json" />
-
+        <button id="format-all-btn" class="secondary">Formatar Tudo</button>
+        <button id="export-all-btn" class="secondary">Exportar Tudo para .txt</button>
+        <button id="export-xlsx-btn" class="secondary">Exportar Tudo para .xlsx</button>
     </div>
 
-    <!-- Template de Aula -->
-    <template id="aula-template">
-        <div class="aula-container">
-            <h3 class="aula-title">Aula X</h3>
-            <label>
-                <input type="checkbox" class="multipart-checkbox" />
-                Vídeo em várias partes
-            </label>
-            <div class="inputs-wrapper"></div>
-
-            <button class="add-part-btn" style="display:none;">Adicionar parte</button>
-            <button class="format-btn">Formatar</button>
-            <button class="export-individual-btn">Exportar Aula</button>
-            <button class="remove-aula-btn">Remover Aula</button>
-
-            <textarea class="output-textarea" placeholder="O resultado formatado aparecerá aqui..." readonly></textarea>
-            <button class="copy-btn" style="display:none;">Copiar</button>
+    <div id="global-prompt-container" class="aula-container">
+        <div class="aula-header">
+            <h2 class="aula-title">Prompt Geral</h2>
+            <div class="aula-header-controls">
+                <button class="expand-collapse-btn" title="Minimizar/Expandir">►</button>
+            </div>
         </div>
-    </template>
+        <div class="aula-content" style="display: none;">
+            <div class="textarea-group">
+                    <textarea id="global-prompt-textarea">Você agora deve auxiliar na formatação de textos de decupagem para o formato aceito na ferramenta Markerbox. Você receberá textos de decupagem que contém minutagens de entrada e saída que podem conter comentários relativos à elas. Quando houver uma minutagem incompleta (somente entrada/saída), você deve adicionar a minutagem faltante (entrada ou saida) com uma pequena diferença de até 1 segundo para que o Markerbox entenda e possa criar a marcação corretamente (estas minutagens incompletas geralmente vêm com um comentário como "início/encerramento do vídeo/gravação").
+Um exemplo de texto original de decupagem:
 
-    <script type="module" src="script.js"></script>
+"2GETT - IA para Negócios
+Aula 1 / Vídeo 2 - Como a IA pode te ajudar na visão de futuro e insights
+Vídeo começa em: 22s (Sejam bem-vindos e bem-vindas)
+*Substituir o slide de 19min53s à 21min15s & de 21min25s à 21min32s pelo *slide 31* do PPTx da Aula 1: Aula 1 - COMO A IA PODE TE AJUDAR NA VISÃO DE FUTURO E INSIGHTS_revisado.pptx
+27min47s (muito mais facilitados ali pro seu processo) ~ 29min25s (nesse vídeo a gente entendeu)
+Vídeo termina em: 29min48s (te vejo no próximo vídeo)"
+
+Como este exemplo deve ficar após formatado para o Markerbox:
+00:22	00:25	Início do vídeo
+19:53	21:15	Substituir slide
+21:25	21:32	Substituir slide
+27:47	29:25	(muito mais facilitados ali pro seu processo)~(nesse vídeo a gente entendeu)
+29:48	29:52	Final do vídeo	(te vejo no próximo vídeo)
+
+ATENÇÃO: Você não deve escrever "[Tab]", mas sim adicionar um espaço especial utilizando o recurso de tabulação do teclado
+Você deve evitar de realizar quebras de linha indevidas, pois isso faz com que o Markerbox ignore os valores desejados. Isso significa realizar quebras de linha somente quando for iniciar uma nova marcação de minutagem.
+
+Quando houverem casos em que há somente um valor de entrada seguido de "(Corte)" ou "Corte" na mesma linha ou se houver um valor de entrada e um valor de saída seguidos apenas de "(Corte)" e, ao mesmo tempo, na linha logo abaixo também só houver um valor de entrada seguido de "Retoma...", você deve juntar o valor de entrada da segunda linha à primeira linha como valor final, eliminando o texto "(Corte)" e fromatando com os espaços de Tab como as demais formatações.
+Geralmente, valores de tempo únicos seguidos de "(Corte)" representam um valor de ENTRADA de um corte no video, especialmente quando estiver seguido de um único valor de tempo na linha debaixo que contenha o comentário "Retoma..." ou "Retorna..." ou algo parecido (que vai representar o valor de SAÍDA deste corte). Você deve ser sensível para identificar isso e formatar corretamente.
+Aqui um exemplo do texto ANTES da formatação com entradas e saídas ERRADAS:
+"03:31 (Corte)
+03:39 (Retorna em: "E a arquitetura ela é estratégia...")"
+
+Aqui como este texto deve ficar após a formatação:
+"03:31	03:39	(Retoma em: "E a arquitetura ela é estratégia...")"
+
+Aqui outro exemplo do texto ANTES da formatação com entradas e saídas ERRADAS:
+"00:00 - 00:18 (Corte)
+00:19 (Retorna em: "KPIs que importam...")"
+
+Aqui como este texto deve ficar após a formatação:
+"00:18	00:19	(Retorna em: "KPIs que importam...")"
+
+Quando houverem linhas que iniciam com um valor de tempo menor do que o último valor de tempo linhas acima, isso significa que esta é uma decupagem com mais de uma PARTE. Um exemplo de como identificar decupagens com mais de uma PARTE:
+"00:55	00:56	(Introdução)
+04:12	04:16	(Corte e finaliza - O Riverside bugou para mim durante a gravação, então finalizamos ela
+e iniciamos novamente na PARTE 2)
+00:00	00:18	(Corte)
+00:19	00:20	(Retorna em: "KPIs que importam...")
+26:10	26:11	(Finaliza)"
+
+Neste exemplo acima, o valor "00:00" na terceira linha é menor que "04:16", que deveria ser o valor final mais alto das linhas anteriores.
+Quando isso acontecer, todos os valores de entrada e saída da linha identificada como o início de uma nova PARTE devem ser recalculados de forma a dar continuidade na decupagem como se fosse um único vídeo, a partir do último valor de tempo mais alto. Utilizando ainda o exemplo acima, é assim que o texto deveria ficar após formatado:
+"00:54	00:55	(INTRODUÇÃO)
+04:12	04:16	(Corte e finaliza - O Riverside bugou para mim durante a gravação, então finalizamos ela
+e iniciamos novamente na PARTE 2)
+04:16	04:34	(Corte)
+04:35	04:36	(Retorna em: "KPIs que importam...")
+30:26	30:27	(finaliza)"
+
+Você deve ser sensível aos valores de tempo e marcações de texto do tempo orginal, julgando quando deve unir linhas ou criar marcações de entrada/saída conforme a instrução. Isso significa que, no exemplo de input original abaixo:
+"00:14 (Introdução)
+01:42 (Corte)
+01:53 (Retorna em: "Então, bem-vindos a aula de Desenvolvimento...")
+14:06 (Corte)
+14:48 (Retorna em: "Hoje T.I está no centro do negócio...")"
+Você deve levar em consideração que o "00:14  (Introdução)" deve ter o valor de entrada de "00:00", uma vez que todo vídeo inicia do zero, também que em "01:42 (corte)" há um corte no vídeo sem o valor exato de entada/saída na mesma linha, mas pela lógica que o corte deve ser retomado, podemos encontrar o valor de saída na linha "01:53 (Retorna...". Você deve levar essas coisas em consideração para que JAMAIS gere minutagens erradas como no exemplo:
+"00:13	00:14	(Introdução)
+00:14	01:42	(Corte)
+01:42	01:53	(Retorna em: "Então, bem-vindos a aula de Desenvolvimento...")" - pois aqui o erro está em criar uma marcação de "00:14" à "01:42" que não deveria existir
+Realize uma verificação de lógica e reflita após a formatação antes de retornar sua resposta.
+
+O jeito correto de formatar a decupagem acima seria como abaixo:
+"00:00	00:14	(Introdução)
+01:42	01:53	(Retorna em: "Então, bem-vindos a aula de Desenvolvimento...")
+14:06	14:48	(Retorna em: "Hoje T.I está no centro do negócio...")"</textarea>
+                <div class="resize-handle"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="file-drop-zone">
+        <p>Arraste e solte arquivos aqui ou <span>clique para selecionar</span> para criar Aulas automaticamente.</p>
+        <input type="file" id="text-file-input" multiple accept=".txt" style="display:none;">
+    </div>
+
+    <main id="main-content">
+        <div id="rev-container">
+            <div id="rev-tabs">
+                <!-- Tabs will be injected here by JS -->
+                <button id="add-rev-btn" title="Adicionar Revisão">+</button>
+            </div>
+            <div id="rev-contents">
+                <!-- Rev content with aulas-container will be injected here by JS -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="modal-overlay" class="hidden">
+    <div id="modal-container">
+        <h3 id="modal-title"></h3>
+        <div id="modal-content">
+            <p id="modal-message"></p>
+            <div id="modal-prompt" class="hidden">
+
+            </div>
+        </div>
+        <div id="modal-buttons">
+            <!-- Buttons will be injected here -->
+        </div>
+    </div>
+</div>
+
+<template id="aula-template">
+    <div class="aula-container" draggable="true">
+        <div class="aula-header">
+            <span class="drag-handle">::</span>
+            <h2 class="aula-title" contenteditable="true">Aula 0</h2>
+            <div class="aula-header-controls">
+                <button class="expand-collapse-btn" title="Minimizar/Expandir">▼</button>
+                <button class="remove-aula-btn" title="Remover Aula">&times;</button>
+            </div>
+        </div>
+        <div class="aula-content">
+            <div class="textarea-group main-input-group">
+                <div class="main-input-header">
+                    <label class="main-input-label">Input (Texto Original)</label>
+                    <div class="input-options">
+                        <div class="multipart-option">
+                            <input type="checkbox" class="multipart-checkbox" />
+                            <label>Vídeo em várias partes</label>
+                        </div>
+                        <div class="inline-mode-option">
+                            <input type="checkbox" class="inline-mode-checkbox" />
+                            <label>Modo em Linha</label>
+                        </div>
+                        <div class="lessthan-one-hour-option" style="display: none;">
+                            <input type="checkbox" class="lessthan-one-hour-checkbox" checked />
+                            <label>Vídeo com menos de 1h</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="inputs-wrapper">
+                    <!-- JS will inject input fields here -->
+                </div>
+                <div class="inline-input-controls" style="display: none;">
+                    <button class="add-part-btn-inline">+ Parte</button>
+                    <button class="remove-last-part-btn">- Parte</button>
+                </div>
+
+                <button class="add-part-btn" title="adicionar outra parte" style="display: none;">+</button>
+            </div>
+            <div class="button-group">
+                <button class="format-btn">Formatar</button>
+                <button class="clear-btn secondary">Limpar</button>
+                <button class="export-individual-btn secondary" title="Exportar esta aula para .txt">Exportar Aula</button>
+            </div>
+            <div class="textarea-group output-group">
+                <div class="output-header">
+                    <label>Output (Resultado)</label>
+                    <div class="output-info">
+                        <span class="marker-count" style="display: none;"></span>
+                        <button class="copy-btn tertiary" style="display: none;">Copiar</button>
+                    </div>
+                </div>
+                <textarea class="output-textarea" readonly placeholder="O resultado formatado aparecerá aqui..."></textarea>
+                <div class="resize-handle"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="module" src="script.js"></script>
 </body>
 </html>
