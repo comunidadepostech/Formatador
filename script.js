@@ -851,7 +851,6 @@ async function formatAula(aulaEl, onProgress = null) {
     markerCountSpan.style.display = 'none';
 
     try {
-
         outputTextarea.value = completion.content;
         const markerCount = (completion.content.match(/^\d/gm) || []).length;
         if (markerCount > 0) {
@@ -876,7 +875,7 @@ async function formatAula(aulaEl, onProgress = null) {
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `Você é um assistente que formata textos seguindo as instruções do usuário, respeitando tabulações e a estrutura do texto. INSTRUÇÕES:\n${promptGeneral}\n\nTEXTO DE ENTRADA:\n${allInputs}\n\nRESULTADO FORMATADO:`
+                            text: `Você é um assistente que formata textos seguindo as instruções do usuário, respeitando tabulações e a estrutura do texto. INSTRUÇÕES:\n${globalPromptTextarea.value.trim()}\n\nTEXTO DE ENTRADA:\n${allInputs}\n\nRESULTADO FORMATADO:`
                         }]
                     }]
                 })
