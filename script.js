@@ -851,18 +851,6 @@ async function formatAula(aulaEl, onProgress = null) {
     markerCountSpan.style.display = 'none';
 
     try {
-        outputTextarea.value = completion.content;
-        const markerCount = (completion.content.match(/^\d/gm) || []).length;
-        if (markerCount > 0) {
-            markerCountSpan.textContent = `${markerCount} Marcações`;
-            markerCountSpan.style.display = 'inline-block';
-        }
-        if (onProgress) onProgress(); // Callback for progress tracking
-    } catch (error) {
-
-    }
-
-    try {
         const GEMINI_API_KEY = document.getElementById('API_KEY').value.trim();
         const completion = await fetch(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
